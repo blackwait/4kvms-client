@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>4kvms 影视客户端</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" id="brand">🎬 4kvms</div>
+    <nav class="tabs" id="classifyTabs"></nav>
+    <form class="search" id="searchForm">
+      <input type="text" id="searchInput" placeholder="搜索片名..." autocomplete="off">
+      <button type="submit">搜索</button>
+    </form>
+  </header>
+
+  <!-- 浏览视图 -->
+  <main id="browseView" class="view">
+    <div class="filters" id="filterBar"></div>
+    <div class="grid" id="grid"></div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+
+  <!-- 详情视图 -->
+  <main id="detailView" class="view hidden">
+    <button class="back" id="backBtn">← 返回</button>
+    <div class="detail-top">
+      <img class="detail-cover" id="detailCover" src="">
+      <div class="detail-info">
+        <h1 id="detailTitle"></h1>
+        <div class="meta" id="detailMeta"></div>
+        <p class="desc" id="detailDesc"></p>
+        <div class="info-grid" id="detailInfo"></div>
+      </div>
+    </div>
+
+    <div class="player-wrap" id="playerWrap">
+      <video id="player" controls playsinline></video>
+      <div class="player-loading" id="playerLoading">加载中...</div>
+    </div>
+
+    <div class="episodes-section">
+      <h3>选集 <span class="ep-status" id="epStatus"></span></h3>
+      <div class="episodes" id="episodes"></div>
+    </div>
+
+    <div class="related-section">
+      <h3>相关推荐</h3>
+      <div class="grid related" id="related"></div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="/app.js?v=3"></script>
+</body>
+</html>

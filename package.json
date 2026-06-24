@@ -1,0 +1,14 @@
+{
+  "name": "4kvms-client",
+  "version": "1.0.0",
+  "description": "4kvms 影视客户端 - 浏览/搜索/播放电视剧与动漫",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
