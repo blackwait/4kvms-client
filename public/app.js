@@ -29,6 +29,38 @@ const state = {
   detail: null, hls: null,
 };
 
+// ---------- 播放历史 ----------
+const HISTORY_KEY = '4kvms_history';
+const HISTORY_MAX = 100;
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
+}
+
+function saveHistory(list) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+
+function addHistory(item) {
+  const list = loadHistory();
+  // 去重：同 playId + 同集数只保留最新
+  const idx = list.findIndex(h => h.playId === item.playId && h.episode === item.episode);
+  if (idx !== -1) list.splice(idx, 1);
+  list.unshift(item);
+  if (list.length > HISTORY_MAX) list.length = HISTORY_MAX;
+  saveHistory(list);
+}
+
+function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+}
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 const $ = (id) => document.getElementById(id);
 const api = (p) => fetch(p).then(r => r.json());
 function toast(msg) {
@@ -39,6 +71,7 @@ function imgSrc(url) { return url ? url.replace(/&amp;/g, '&') : '/placeholder.s
 function showView(v) {
   $('browseView').classList.toggle('hidden', v !== 'browse');
   $('detailView').classList.toggle('hidden', v !== 'detail');
+  $('historyView').classList.toggle('hidden', v !== 'history');
   if (v === 'browse') $('filterBar').style.display = '';
 }
 
@@ -236,6 +269,17 @@ async function playEpisode(dataid, playId, n) {
     const q = res.data.qualities[0];
     loadStream(video, q.url);
     document.title = `${state.detail ? state.detail.title : ''} 第${n}集 - 4kvms`;
+    // 记录播放历史
+    if (state.detail) {
+      addHistory({
+        playId: state.detail.playId,
+        title: state.detail.title,
+        cover: state.detail.cover,
+        episode: n,
+        dataid: dataid || '',
+        timestamp: Date.now(),
+      });
+    }
   } catch (e) {
     loading.style.display = 'none';
     loading.textContent = '加载中...';
@@ -273,6 +317,69 @@ function loadStream(video, url) {
     $('playerLoading').textContent = '浏览器不支持 HLS 播放';
   }
 }
+
+// ---------- 历史视图 ----------
+function renderHistory() {
+  const list = loadHistory();
+  const grid = $('historyGrid');
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty">暂无播放历史</div>';
+    return;
+  }
+  grid.innerHTML = list.map(h => `
+    <div class="card history-card" data-playid="${h.playId}" data-dataid="${h.dataid}" data-ep="${h.episode}">
+      <div class="poster">
+        <img src="${imgSrc(h.cover)}" loading="lazy" onerror="this.src='/placeholder.svg'">
+        <span class="history-ep">第${h.episode}集</span>
+        <span class="history-time">${formatTime(h.timestamp)}</span>
+      </div>
+      <div class="card-title">${h.title || ''}</div>
+    </div>`).join('');
+  grid.querySelectorAll('.card').forEach(c => c.onclick = () => {
+    // 先打开详情，详情加载完后自动播放对应集数（renderDetail 会自动播第一集）
+    // 需要在详情加载后定位到正确集数
+    openDetailAndPlay(c.dataset.playid, c.dataset.dataid, parseInt(c.dataset.ep));
+  });
+}
+
+async function openDetailAndPlay(playId, dataid, ep) {
+  showView('detail');
+  window.scrollTo(0, 0);
+  try {
+    const res = await api('/api/detail/' + playId);
+    if (res.code !== 200) throw new Error(res.message);
+    state.detail = res.data;
+    renderDetail(res.data);
+    // 渲染完成后，定位到指定集数播放
+    const targetEp = res.data.episodes.find(e => e.n === ep) ||
+      res.data.episodes.find(e => e.dataid === dataid) ||
+      res.data.episodes[0];
+    if (targetEp) {
+      playEpisode(targetEp.dataid, targetEp.playId, targetEp.n);
+    }
+  } catch (e) {
+    toast('详情加载失败：' + e.message);
+    showView('browse');
+  }
+}
+
+$('historyBtn').onclick = () => {
+  if (state.hls) { state.hls.destroy(); state.hls = null; }
+  $('player').removeAttribute('src');
+  $('player').load();
+  showView('history');
+  document.title = '播放历史 - 4kvms';
+  renderHistory();
+};
+
+$('historyClear').onclick = () => {
+  if (!loadHistory().length) return;
+  if (confirm('确定清空所有播放历史？')) {
+    clearHistory();
+    renderHistory();
+    toast('历史已清空');
+  }
+};
 
 // ---------- 返回 ----------
 $('backBtn').onclick = () => {

@@ -12,6 +12,7 @@
   <header class="topbar">
     <div class="brand" id="brand">🎬 4kvms</div>
     <nav class="tabs" id="classifyTabs"></nav>
+    <button class="tab" id="historyBtn" style="margin-left:8px;">📜 历史</button>
     <form class="search" id="searchForm">
       <input type="text" id="searchInput" placeholder="搜索片名..." autocomplete="off">
       <button type="submit">搜索</button>
@@ -23,6 +24,15 @@
     <div class="filters" id="filterBar"></div>
     <div class="grid" id="grid"></div>
     <div class="pagination" id="pagination"></div>
+  </main>
+
+  <!-- 历史视图 -->
+  <main id="historyView" class="view hidden">
+    <div class="history-header">
+      <h2>📜 播放历史</h2>
+      <button class="history-clear" id="historyClear">清空历史</button>
+    </div>
+    <div class="grid" id="historyGrid"></div>
   </main>
 
   <!-- 详情视图 -->
@@ -55,6 +65,6 @@
   </main>
 
   <div class="toast" id="toast"></div>
-  <script src="/app.js?v=3"></script>
+  <script src="/app.js?v=4"></script>
 </body>
 </html>
